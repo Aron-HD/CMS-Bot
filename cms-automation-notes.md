@@ -148,7 +148,7 @@ As a bonus, this could automate adding fields in front of the Category, Year for
 
 Winners have to strip out the existing 'Shortlisted,' which could possibly be done with a `value.replace('Shortlisted', medal)` from the value field. 
 
-Hopefully can get there by targetting in Selenium the same way as CSS:
+Hopefully can get there by targeting in Selenium the same way as CSS:
 
 - `<div id="content-metadata-section" class="form-group">`
 - `<div class="form-body">`

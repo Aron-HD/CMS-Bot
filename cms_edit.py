@@ -5,6 +5,7 @@ import time
 import logging
 import sys
 
+# Setup logging
 def setup_custom_logger(name):
     formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
                                   datefmt='%d-%m-%Y %H:%M:%S')
@@ -29,6 +30,7 @@ class CMSBot:
 		bot.maximize_window()
 		url = 'http://newcms.warc.com/content/edit'
 		bot.get(url) # log
+		logger.info(f"requested url: '{url}'")
 		bot.implicitly_wait(5)
 		legid = bot.find_element_by_name('LegacyId')
 		legid.clear()
@@ -50,7 +52,7 @@ class CMSBot:
 		bot.find_element_by_id('GenerateBullets').click()
 		logger.info("clicked [Generate Bullets]")
 
-	def additional_info(self, award): # takes award from csv row['Award']
+	def additional_info(self, award):
 		bot = self.bot
 		info = bot.find_element_by_id('AdditionalInformation')
 		value = info.get_attribute('value')
@@ -61,17 +63,20 @@ class CMSBot:
 		new_info = bot.find_element_by_id('AdditionalInformation').get_attribute('value')
 		logger.info('additional info - ' + new_info)
 		
-	def add_video(self, vnum, vlink, vtype): # , vtitle
+	def add_video(self, vnum, vlink, vtype):
 		bot = self.bot
 
+		# setup scroll functionality
 		def scroll():
 			bot.execute_script("window.scrollTo(0, document.body.scrollHeight);") 
 			logger.info('scroll')
 
+		# setup function to click the 'Add video' button
 		def add_button():
 			bot.find_element_by_id('add-video-button').click()
 			logger.info('clicked [Add]')
-			
+		
+		# get article title to reuse for video names
 		article_title = bot.find_element_by_id('Title').get_attribute('value')
 		logger.info('article title - ' + article_title)
 		scroll()
@@ -138,9 +143,18 @@ class CMSBot:
 			else:
 				pass
 
-def main():
+def select1():
 	"""
-	pass in a csv file with the following column headers:
+	- Goes into each ID by splitting ID from v0 number in row['Vid']
+	- adds relevant video (v01, v02 or v03)
+	- adds Vimeo review link code from csv row['Link']
+	- copies article title to video title
+	- selects creative or remains campaign from row['Type']
+	- saves changes
+
+	#####################################################
+
+	Pass in a csv file with the following column headers:
 	
 			[ID,	Vid,	Award,	Link,	Type]
 
@@ -165,7 +179,7 @@ def main():
 
 				try:
 					# the 'x' here could be an issue. Length is probably better
-					if not 'x' in vnum:
+					if len(vnum) >= 2:
 						if 'v01' in vnum:
 							cms.edit_id(ID)
 							time.sleep(1)
@@ -178,7 +192,7 @@ def main():
 						cms.save_changes()
 						time.sleep(1)
 					else:
-						logger.info("- 'x' id had no video")
+						logger.info("- 'x' ID had no valid video")
 				
 				except Exception as e:
 					logger.error(e)
@@ -187,26 +201,114 @@ def main():
 		logger.error(e)
 		logger.info('not a valid csv file')
 
+def select2():
 
-	# These currently work
+	"""
+	Takes award from csv row['Award'] and appends it to 
+	'Additional info' field in metadata. 
+	'Entrant', 'Gold', 'Special Award', etc.
 
-	# cms.generate_bullets()
-	# cms.additional_info(Award) # takes award from csv row['Award']
+	Pass in a csv file with the following column headers:
+	
+			[ID, Award]
 
-if __name__ == '__main__':
-	main()
-	print('''
-		
-		###	IMPROVEMENTS ###
+	the order doesn't matter.
+	"""
 
-#		 -> use pandas to read directly from the videos tab of the EDIT spreadsheet
-#		  
-# 		  + would be easier than pasting stuff into the csv...
+	cms = CMSBot() 
+
+	fn = 'cms-input.csv'
+
+	try:
+		with open(fn, newline='') as csvfile:
+			r = csv.DictReader(csvfile)
+			for row in r:
+				ID = row['ID']
+				Award = row['Award'] # to update additional_info
+
+				logger.info(f'-> csv row [{ID}, {Award}]')
+
+				try:
+					if len(ID) >= 5:
+						if len(Award) >= 2:
+						
+							edit_id(ID)
+							time.sleep(1)
+							additional_info(Award)
+							time.sleep(1)
+							save_changes()
+						else:		
+							logger.info("- Incorrect IDs or Awards in csv. Check columns.")
+
+				except Exception as e:
+							logger.error(e)
+	except Exception as e:
+		logger.error(e)
+		logger.info('not a valid csv file')
+
+def select3():
+	'''Just needs a list of IDs in the CSV column ID'''
+	cms = CMSBot()
+	fn = 'cms-input.csv'
+	try:
+		with open(fn, newline='') as csvfile:
+			r = csv.DictReader(csvfile)
+			for row in r:
+				ID = row['ID']
+				logger.info(f'-> csv row [{ID}]')
+
+				try:
+					if len(ID) >= 5:
+						edit_id(ID)
+						time.sleep(1)
+						cms.generate_bullets()
+						time.sleep(1)
+						save_changes()
+					else:
+						logger.info("- No valid IDs in csv. Check 'ID' column.")
+
+				except Exception as e:
+						logger.error(e)
+	except Exception as e:
+		logger.error(e)
+		logger.info('not a valid csv file')
+
+def main():
+	selector = int(input(f'''FUNCTIONS
+	'1' - Add videos
+	'2' - Edit additional info ('Entrant', 'Gold', 'Special Award', etc.)
+	'3' - Generate bullet summaries
+	Select: '''))
+
+	if selector == 1:
+		select1()
+	if selector == 2:
+		select2()
+	if selector == 3:
+		select3()
+	else:
+		print(f'{selector} was not a valid selection \n\n# ~~~ SCRIPT ENDED ~~~ #')
+
+	print('''#	
+# 	  Improvements
+#	  ============
+#	
+#  -> check whether Video links exists before trying to add it
+#			
+#	+ would stop duplication
 #
-#		  - might run wild, so having more control might be better, 
-#			maybe should just use input for specifying a csv file
+#	- might screw up if trying to add a v02 or v03 if v01 exists 
+#	  due to link numbering. The link would become AddedVideo0 for v02
+#	  rather than AddedVideo1.
+#
+#  -> use pandas to read directly from the videos tab of the EDIT spreadsheet
+#		  
+# 	+ would be easier than pasting stuff into the csv...
+#
+#	- might run wild, so having more control might be better, 
+#	  maybe should just use input for specifying a csv file
 
 ''')
 
-
-
+if __name__ == '__main__':
+	main()
