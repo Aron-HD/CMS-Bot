@@ -56,9 +56,9 @@ class CMSBot:
 		bot = self.bot
 		info = bot.find_element_by_id('AdditionalInformation')
 		value = info.get_attribute('value')
-		logger.info('additional info - ' + value)
+		logger.info('additional info - ' + value.replace('Shortlisted, ',''))
 		info.clear()
-		info.send_keys(award + ', ' + value)
+		info.send_keys(award + ', ' + value.replace('Shortlisted, ',''))
 		logger.info('appending - ' + award)
 		new_info = bot.find_element_by_id('AdditionalInformation').get_attribute('value')
 		logger.info('additional info - ' + new_info)
@@ -232,11 +232,11 @@ def select2():
 					if len(ID) >= 5:
 						if len(Award) >= 2:
 						
-							edit_id(ID)
+							cms.edit_id(ID)
 							time.sleep(1)
-							additional_info(Award)
+							cms.additional_info(Award)
 							time.sleep(1)
-							save_changes()
+							cms.save_changes()
 						else:		
 							logger.info("- Incorrect IDs or Awards in csv. Check columns.")
 
@@ -259,11 +259,11 @@ def select3():
 
 				try:
 					if len(ID) >= 5:
-						edit_id(ID)
+						cms.edit_id(ID)
 						time.sleep(1)
 						cms.generate_bullets()
 						time.sleep(1)
-						save_changes()
+						cms.save_changes()
 					else:
 						logger.info("- No valid IDs in csv. Check 'ID' column.")
 
@@ -286,8 +286,10 @@ def main():
 		select2()
 	if selector == 3:
 		select3()
-	else:
-		print(f'{selector} was not a valid selection \n\n# ~~~ SCRIPT ENDED ~~~ #')
+	if selector not in range(1,4):
+		print(f'{selector} was not a valid selection')
+
+	print('\n\n# ~~~ SCRIPT ENDED ~~~ #')
 
 	print('''#	
 # 	  Improvements
