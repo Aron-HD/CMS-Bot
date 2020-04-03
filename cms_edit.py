@@ -1,9 +1,12 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.options import Options
 import csv
 import time
 import logging
 import sys
+chrome_options = Options()
+chrome_options.add_argument('--headless')
 
 # Setup logging
 def setup_custom_logger(name):
@@ -23,7 +26,7 @@ logger = setup_custom_logger('log.txt')
 
 class CMSBot:
 	def __init__(self):
-		self.bot = webdriver.Chrome(executable_path=r"C:\Users\arondavidson\AppData\Local\Programs\Python\Python37\chromedriver.exe")
+		self.bot = webdriver.Chrome(options=chrome_options, executable_path=r"C:\Users\arondavidson\AppData\Local\Programs\Python\Python37\chromedriver.exe")
 
 	def edit_id(self, ID):
 		bot = self.bot
@@ -143,7 +146,7 @@ class CMSBot:
 			else:
 				pass
 
-def select1():
+def select1(cms):
 	"""
 	- Goes into each ID by splitting ID from v0 number in row['Vid']
 	- adds relevant video (v01, v02 or v03)
@@ -160,7 +163,6 @@ def select1():
 
 	the order doesn't matter.
 	"""
-	cms = CMSBot() 
 
 	fn = 'cms-input.csv'
 
@@ -201,7 +203,7 @@ def select1():
 		logger.error(e)
 		logger.info('not a valid csv file')
 
-def select2():
+def select2(cms):
 
 	"""
 	Takes award from csv row['Award'] and appends it to 
@@ -214,9 +216,6 @@ def select2():
 
 	the order doesn't matter.
 	"""
-
-	cms = CMSBot() 
-
 	fn = 'cms-input.csv'
 
 	try:
@@ -246,9 +245,9 @@ def select2():
 		logger.error(e)
 		logger.info('not a valid csv file')
 
-def select3():
+def select3(cms):
 	'''Just needs a list of IDs in the CSV column ID'''
-	cms = CMSBot()
+	
 	fn = 'cms-input.csv'
 	try:
 		with open(fn, newline='') as csvfile:
@@ -274,6 +273,9 @@ def select3():
 		logger.info('not a valid csv file')
 
 def main():
+
+	cms = CMSBot()
+
 	selector = int(input(f'''FUNCTIONS
 	'1' - Add videos
 	'2' - Edit additional info ('Entrant', 'Gold', 'Special Award', etc.)
@@ -281,13 +283,16 @@ def main():
 	Select: '''))
 
 	if selector == 1:
-		select1()
+		select1(cms)
 	if selector == 2:
-		select2()
+		select2(cms)
 	if selector == 3:
-		select3()
+		select3(cms)
 	if selector not in range(1,4):
 		print(f'{selector} was not a valid selection')
+
+	# so the driver quits properly 
+	cms.bot.quit()
 
 	print('\n\n# ~~~ SCRIPT ENDED ~~~ #')
 
