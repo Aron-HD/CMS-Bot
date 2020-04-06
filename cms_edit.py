@@ -22,7 +22,7 @@ def setup_custom_logger(name):
     logger.addHandler(screen_handler)
     return logger
 
-logger = setup_custom_logger('log.txt')
+logger = setup_custom_logger('logs/cms_edit.log')
 
 class CMSBot:
 	def __init__(self):

@@ -12,6 +12,12 @@ This would also raise issues of installing the .exe file due to local admin righ
 
 Currently have to paste the relevant information into csv columns and then select 1, 2 or 3 to run different function.
 
+### In progress
+
+- cms_batch_actions.py
+
+Started developing batch functionality - running into issues with interacting with table objects as have to match text (no ids or names).
+
 ### Improvements
 
 - check whether Video links exist before trying to add them
