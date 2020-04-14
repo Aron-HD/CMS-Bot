@@ -67,17 +67,29 @@ class CMSBot:
 	def select_ids(self, ids, remainder_IDs):
 		
 		bot = self.bot
+		confirmed_IDs = []
 
+		logger.info('checking IDs are listed')
+		# match IDs to see if they exist before ticking
 		for i in ids:
 			try:
-				data = bot.find_element_by_xpath(f"//tbody/tr/td[contains(text(), '{i}')]").text
-				logger.info(data)
+				bot.find_element_by_xpath(f"//tbody/tr/td[contains(text(), '{i}')]")
+				confirmed_IDs.append(i)
 			except NoSuchElementException:
-				logger.error('no such element: Unable to locate element: {"method":"xpath","selector":"//tbody/tr/td[contains(text(), ' + f"'{i}'" + '}')
-				logger.info(f'appending {i} to remaining IDs list')
 				remainder_IDs.append(int(i))
+				logger.error(
+					'no such element: Unable to locate element: {"method":"xpath","selector":"//tbody/tr/td[contains(text(), '
+																	+ f"'{i}'" + '}' + f'appended {i} to remaining_IDs list')
 
-		# logger.info('ticked id')
+		for i in confirmed_IDs:
+			try:
+				tickbox = bot.find_elements_by_xpath(f"//tbody/tr/td[contains(text(), '{i}')]/../td")[0].click()
+				logger.info(f'{i} ticked')
+			except Exception as e:
+				logger.info('')
+
+	def set_live(self):
+		pass
 
 def main():
 
@@ -111,15 +123,17 @@ def main():
 		logger.info('running main() again')
 		main()
 
+	# split into function
 	try:
 		# read shortlist / metadata csv for IDs to interact with (this will need category / award interaction)
 		csv_file = r'..\Metadata\csv\Content_metadata.csv'
+
 		with open(csv_file, newline='') as f:
 			r = csv.DictReader(f)
 			IDs = []
 			# switch from str to int so can list low and high + append each ID to list of IDs
 			[IDs.append(int(row['ID'])) for row in r]
-		
+	
 		remainder_IDs = []
 
 		# FIRST LOOP
@@ -128,7 +142,6 @@ def main():
 			id_from = min(IDs)
 			id_to = max(IDs)
 			cms.edit_ids(code, id_from, id_to)
-			
 			logger.info(str(len(IDs)) + f' IDs: {IDs}')
 			cms.select_ids(IDs, remainder_IDs)
 
@@ -147,7 +160,7 @@ def main():
 		logger.error(e)
 
 	# pause before exit
-	time.sleep(2)
+	time.sleep(3)
 	cms.bot.quit()
 	logger.info('exited script correctly')
 
