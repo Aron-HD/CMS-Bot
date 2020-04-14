@@ -1,6 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import NoSuchElementException
 import logging
 import sys
 import csv
@@ -38,11 +39,12 @@ class CMSBot:
 
 	def edit_ids(self, code, id_from, id_to):
 		bot = self.bot
-		# bot.maximize_window()
 		url = 'http://newcms.warc.com/content/batch-actions'
-		bot.get(url) # log
-		logger.info('Requested: ' + url)
+		bot.get(url)
+		logger.info('Requested url: ' + url)
 		bot.implicitly_wait(5)
+
+		logger.info(f'editing {code}, {id_from}-{id_to}')
 		# first id
 		IdFrom = bot.find_element_by_id('IdFrom')
 		IdFrom.clear()
@@ -62,27 +64,24 @@ class CMSBot:
 		logger.info('clicked [View]')
 
 
-	def select_ids(self, id_from, id_to):
-
-		def ids():
-			ids = [id_from, id_to]
-			return ids
-
-		bot = self.bot
+	def select_ids(self, ids, remainder_IDs):
 		
-		for i in ids():
-		# table = bot.find_element_by_id("content-metadata-table")
-			data = bot.find_elements_by_xpath('//table/tbody/tr/td[text()]')
-			[print(d) for d in data]
+		bot = self.bot
+
+		for i in ids:
+			try:
+				data = bot.find_element_by_xpath(f"//tbody/tr/td[contains(text(), '{i}')]").text
+				logger.info(data)
+			except NoSuchElementException:
+				logger.error('no such element: Unable to locate element: {"method":"xpath","selector":"//tbody/tr/td[contains(text(), ' + f"'{i}'" + '}')
+				logger.info(f'appending {i} to remaining IDs list')
+				remainder_IDs.append(int(i))
 
 		# logger.info('ticked id')
 
 def main():
 
 	cms = CMSBot()
-
-	id_from = 131385 # int(input('\n\tID RANGE\n- from: '))
-	id_to = 131607 # int(input('- to: '))
 
 	selector = 1 # int(input(f'''
 	# FUNCTIONS
@@ -108,18 +107,47 @@ def main():
 		code = codes[f'{award}']
 		logger.info(code)
 	except Exception as e:
-		logger.error(e, '\nrunning main() again')
+		logger.error(e)
+		logger.info('running main() again')
 		main()
 
 	try:
-		cms.edit_ids(code, id_from, id_to)
-		logger.info(f'editing {code}, {id_from}-{id_to}')
-		cms.select_ids(id_from, id_to)
+		# read shortlist / metadata csv for IDs to interact with (this will need category / award interaction)
+		csv_file = r'..\Metadata\csv\Content_metadata.csv'
+		with open(csv_file, newline='') as f:
+			r = csv.DictReader(f)
+			IDs = []
+			# switch from str to int so can list low and high + append each ID to list of IDs
+			[IDs.append(int(row['ID'])) for row in r]
+		
+		remainder_IDs = []
+
+		# FIRST LOOP
+		if len(remainder_IDs) < 1:
+			# get lowest and highest ID numbers
+			id_from = min(IDs)
+			id_to = max(IDs)
+			cms.edit_ids(code, id_from, id_to)
+			
+			logger.info(str(len(IDs)) + f' IDs: {IDs}')
+			cms.select_ids(IDs, remainder_IDs)
+
+		# SECOND LOOP
+		if len(remainder_IDs) > 0:
+			logger.info(str(len(remainder_IDs)) + f' IDs remaining: {remainder_IDs}')
+			id_from = min(remainder_IDs)
+			id_to = max(remainder_IDs)
+			cms.edit_ids(code, id_from, id_to)
+			logger.info(f'editing {code}, {id_from}-{id_to}')
+			cms.select_ids(remainder_IDs, [])
+			# reset IDs
+			remainder_IDs = []
+
 	except Exception as e:
 		logger.error(e)
 
 	# pause before exit
-	time.sleep(5)
+	time.sleep(2)
 	cms.bot.quit()
 	logger.info('exited script correctly')
 

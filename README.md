@@ -16,7 +16,10 @@ Currently have to paste the relevant information into csv columns and then selec
 
 - cms_batch_actions.py
 
-Started developing batch functionality - running into issues with interacting with table objects as have to match text (no ids or names).
+Started developing batch functionality.
+
+- ~~ran into issues with interacting with table objects as have to match text (no ids or names)~~ **solved**
+- difficulty locating correct tick boxes as they have all have unique IDs
 
 ### Improvements
 
@@ -32,7 +35,7 @@ Could probably work around this by getting a count function and using AddedVideo
 
 This would be easier than pasting or exporting to a csv. Having the csv provides more control though, which is preferable.
 
-- Use input for specifying a csv file 
+- Use input for specifying a csv file
 
 This means that it doesn't have to be in the same folder as the .py file.
 

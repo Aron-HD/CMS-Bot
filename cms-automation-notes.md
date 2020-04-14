@@ -46,23 +46,54 @@ I wonder if this would be different for every showcase...
 ---
 # NEWCMS
 
-## Batch Actions page
+## 1. Batch Actions page
 
 - http://newcms.warc.com/content/batch-actions
 
 This has potential to mark content live, much more accurate than ticking all the boxes individually.
 
-- ID Range (smallest and largest value in list / csv column)
-- Source dropdown menu
-- View button
+- ID Range (smallest and largest value in list / csv column) &#2705
+- Source dropdown menu &#2705
+- View button &#2705
 
 Click through >>>
 
-- Tick boxes
-- ID matching
-- Make live button
+- ID matching &#2705
+- Tick boxes &#274c
+- Make live button &#274c
 
-## Edit page
+### Content table
+
+Tick boxes pose a problem, not sure if i'll be able to locate them as they all have completely unique id fields etc, unless can associate it with each ID, which I've already got it to match `<td class="">131385</td>`.
+
+```python
+<tbody id="content-metadata-table">
+    
+        <tr class="">
+            <td class="">
+                <input data-metadata-selection="d643301b-90fd-4daa-b6cc-c9a7fab06691" id="select-d643301b-90fd-4daa-b6cc-c9a7fab06691" name="select-d643301b-90fd-4daa-b6cc-c9a7fab06691" type="checkbox" value="true"><input name="select-d643301b-90fd-4daa-b6cc-c9a7fab06691" type="hidden" value="false"><label for="select-d643301b-90fd-4daa-b6cc-c9a7fab06691" title=""><span></span></label>
+            </td>
+            <td class="">131385</td>
+            <td class="">Case Study</td>
+            <td class="">WARC Awards</td>
+            <td class="">Santoor: Beauty Spot</td>
+            <td class="">24/04/2020</td>
+            <td class="" data-content-publish-status="">Not Live</td>
+        </tr>
+        <tr class="">
+            <td class="">
+                <input data-metadata-selection="8feef863-3999-4ed3-9fb7-b0c227cf6b99" id="select-8feef863-3999-4ed3-9fb7-b0c227cf6b99" name="select-8feef863-3999-4ed3-9fb7-b0c227cf6b99" type="checkbox" value="true"><input name="select-8feef863-3999-4ed3-9fb7-b0c227cf6b99" type="hidden" value="false"><label for="select-8feef863-3999-4ed3-9fb7-b0c227cf6b99" title=""><span></span></label>
+            </td>
+            <td class="">131386</td>
+            <td class="">Case Study</td>
+            <td class="">WARC Awards</td>
+            <td class="">SNIFF: Clásico Dogs</td>
+            <td class="">24/04/2020</td>
+            <td class="" data-content-publish-status="">Not Live</td>
+        </tr>
+```
+
+## 2. Edit page
 
 - http://newcms.warc.com/content/edit
 
