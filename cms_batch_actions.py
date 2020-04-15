@@ -6,9 +6,11 @@ import logging
 import sys
 import csv
 import time
+from glob import glob
 
 chrome_options = Options()
 # chrome_options.add_argument('--headless')
+chrome_options.add_argument("--start-maximized")
 
 def setup_custom_logger(name):
     formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
@@ -59,8 +61,10 @@ class CMSBot:
 		source = bot.find_element_by_id('Source').click()
 		option = bot.find_element_by_xpath(f'//option[@value="{code}"]').click()
 		logger.info(f'selected {code}')
+		
+		input('press key to continue: ')
 		# clicks view
-		bot.find_element_by_xpath('//input[@type="submit"]').click() # //div[@class="col-md-10 col-lg-9 col-xl-12 form-buttons mt-medium-space mt-xl-0"]
+		bot.find_element_by_xpath('//input[@type="submit"]').click()
 		logger.info('clicked [View]')
 
 
@@ -90,6 +94,41 @@ class CMSBot:
 
 	def set_live(self):
 		pass
+
+def read_category(csv_file, cms, code):
+
+	IDs = []
+	remainder_IDs = []
+
+	with open(csv_file, newline='') as f:
+		r = csv.DictReader(f)
+		# switch from str to int so can list low and high + append each ID to list of IDs
+		[IDs.append(int(row['ID'])) for row in r]
+
+	# FIRST LOOP
+	if len(remainder_IDs) < 1:
+		# get lowest and highest ID numbers
+		id_from = min(IDs)
+		id_to = max(IDs)
+		cms.edit_ids(code, id_from, id_to)
+		logger.info(str(len(IDs)) + f' IDs: {IDs}')
+		cms.select_ids(IDs, remainder_IDs)
+
+	input('press key to continue: ')
+
+	# SECOND LOOP
+	if len(remainder_IDs) > 0:
+		logger.info(str(len(remainder_IDs)) + f' IDs remaining: {remainder_IDs}')
+		id_from = min(remainder_IDs)
+		id_to = max(remainder_IDs)
+		cms.edit_ids(code, id_from, id_to)
+		logger.info(f'editing {code}, {id_from}-{id_to}')
+		cms.select_ids(remainder_IDs, [])
+		# reset IDs
+		remainder_IDs = []
+
+	input('press key to continue: ')
+
 
 def main():
 
@@ -123,44 +162,19 @@ def main():
 		logger.info('running main() again')
 		main()
 
-	# split into function
+	categories = ['Social']
+
 	try:
 		# read shortlist / metadata csv for IDs to interact with (this will need category / award interaction)
-		csv_file = r'..\Metadata\csv\Content_metadata.csv'
-
-		with open(csv_file, newline='') as f:
-			r = csv.DictReader(f)
-			IDs = []
-			# switch from str to int so can list low and high + append each ID to list of IDs
-			[IDs.append(int(row['ID'])) for row in r]
-	
-		remainder_IDs = []
-
-		# FIRST LOOP
-		if len(remainder_IDs) < 1:
-			# get lowest and highest ID numbers
-			id_from = min(IDs)
-			id_to = max(IDs)
-			cms.edit_ids(code, id_from, id_to)
-			logger.info(str(len(IDs)) + f' IDs: {IDs}')
-			cms.select_ids(IDs, remainder_IDs)
-
-		# SECOND LOOP
-		if len(remainder_IDs) > 0:
-			logger.info(str(len(remainder_IDs)) + f' IDs remaining: {remainder_IDs}')
-			id_from = min(remainder_IDs)
-			id_to = max(remainder_IDs)
-			cms.edit_ids(code, id_from, id_to)
-			logger.info(f'editing {code}, {id_from}-{id_to}')
-			cms.select_ids(remainder_IDs, [])
-			# reset IDs
-			remainder_IDs = []
+		for cat in categories:
+			csv_file = glob(fr'..\Metadata\csv\*{cat}_metadata.csv')[0]
+			read_category(csv_file, cms, code)
 
 	except Exception as e:
 		logger.error(e)
 
 	# pause before exit
-	time.sleep(3)
+	time.sleep(2)
 	cms.bot.quit()
 	logger.info('exited script correctly')
 
