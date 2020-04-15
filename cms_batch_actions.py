@@ -25,7 +25,7 @@ def setup_custom_logger(name):
     logger.addHandler(screen_handler)
     return logger
 
-logger = setup_custom_logger('logs/cms_batch_actions.log')
+l = setup_custom_logger('logs/cms_batch_actions.log')
 
 codes = {
 'warc': 'WARC-AWARDS',
@@ -43,29 +43,29 @@ class CMSBot:
 		bot = self.bot
 		url = 'http://newcms.warc.com/content/batch-actions'
 		bot.get(url)
-		logger.info('Requested url: ' + url)
-		bot.implicitly_wait(5)
+		l.info('Requested url: ' + url)
+		bot.implicitly_wait(10)
 
-		logger.info(f'editing {code}, {id_from}-{id_to}')
+		l.info(f'editing {code}, {id_from}-{id_to}')
 		# first id
 		IdFrom = bot.find_element_by_id('IdFrom')
 		IdFrom.clear()
 		IdFrom.send_keys(id_from)
-		logger.info(id_from)
+		l.info(id_from)
 		# last id
 		IdTo = bot.find_element_by_id('IdTo')
 		IdTo.clear()
 		IdTo.send_keys(id_to)
-		logger.info(id_to)
+		l.info(id_to)
 		# selects correct award source, though this isn't strictly necessary
-		source = bot.find_element_by_id('Source').click()
-		option = bot.find_element_by_xpath(f'//option[@value="{code}"]').click()
-		logger.info(f'selected {code}')
+		bot.find_element_by_id('Source').click()
+		bot.find_element_by_xpath(f'//option[@value="{code}"]').click()
+		l.info(f'selected {code}')
 		
-		input('press key to continue: ')
+		# input('press key to continue: ')
 		# clicks view
 		bot.find_element_by_xpath('//input[@type="submit"]').click()
-		logger.info('clicked [View]')
+		l.info('clicked [View]')
 
 
 	def select_ids(self, ids, remainder_IDs):
@@ -73,7 +73,7 @@ class CMSBot:
 		bot = self.bot
 		confirmed_IDs = []
 
-		logger.info('checking IDs are listed')
+		l.info('checking IDs are listed')
 		# match IDs to see if they exist before ticking
 		for i in ids:
 			try:
@@ -81,22 +81,36 @@ class CMSBot:
 				confirmed_IDs.append(i)
 			except NoSuchElementException:
 				remainder_IDs.append(int(i))
-				logger.error(
+				l.error(
 					'no such element: Unable to locate element: {"method":"xpath","selector":"//tbody/tr/td[contains(text(), '
 																	+ f"'{i}'" + '}' + f'appended {i} to remaining_IDs list')
 
 		for i in confirmed_IDs:
 			try:
 				tickbox = bot.find_elements_by_xpath(f"//tbody/tr/td[contains(text(), '{i}')]/../td")[0].click()
-				logger.info(f'{i} ticked')
+				l.info(f'{i} ticked')
 			except Exception as e:
-				logger.info('')
+				l.info(e)
 
 	def set_live(self):
-		pass
+		bot = self.bot
+		bot.implicitly_wait(10)
+		bot.find_element_by_id("handle-metadata-options").click()
+		l.info('clicked bottom dropdown')
+		bot.find_element_by_xpath('//option[@value="metadata"]').click()
+		l.info("selected 'Change metadata'")
+		bot.find_element_by_xpath('//button[@onclick="onManageMetadataClicked()"]').click()
+		l.info('clicked [Go]')
+		bot.find_element_by_xpath('//button[@onclick="onPublishAllClicked()"]').text #.click()
+		l.info("clicked 'Make all items live'")
+		time.sleep(5)
+		bot.find_element_by_xpath('//input[@value="Save changes for all items"]').get_attribute('value') #.click()
+		l.info("clicked 'Save changes for all items'")
+		time.sleep(5)
 
 def read_category(csv_file, cms, code):
 
+	# reset IDs
 	IDs = []
 	remainder_IDs = []
 
@@ -111,23 +125,23 @@ def read_category(csv_file, cms, code):
 		id_from = min(IDs)
 		id_to = max(IDs)
 		cms.edit_ids(code, id_from, id_to)
-		logger.info(str(len(IDs)) + f' IDs: {IDs}')
+		l.info(str(len(IDs)) + f' IDs: {IDs}')
 		cms.select_ids(IDs, remainder_IDs)
+		cms.set_live()
 
-	input('press key to continue: ')
+		input('press key to continue: ')
 
 	# SECOND LOOP
 	if len(remainder_IDs) > 0:
-		logger.info(str(len(remainder_IDs)) + f' IDs remaining: {remainder_IDs}')
+		l.info(str(len(remainder_IDs)) + f' IDs remaining: {remainder_IDs}')
 		id_from = min(remainder_IDs)
 		id_to = max(remainder_IDs)
 		cms.edit_ids(code, id_from, id_to)
-		logger.info(f'editing {code}, {id_from}-{id_to}')
+		l.info(f'editing {code}, {id_from}-{id_to}')
 		cms.select_ids(remainder_IDs, [])
-		# reset IDs
-		remainder_IDs = []
-
-	input('press key to continue: ')
+		cms.set_live()
+		
+	# input('press key to continue: ')
 
 
 def main():
@@ -156,13 +170,13 @@ def main():
 
 	try:
 		code = codes[f'{award}']
-		logger.info(code)
+		l.info(code)
 	except Exception as e:
-		logger.error(e)
-		logger.info('running main() again')
+		l.error(e)
+		l.info('running main() again')
 		main()
 
-	categories = ['Social']
+	categories = ['Social'] # tie to category
 
 	try:
 		# read shortlist / metadata csv for IDs to interact with (this will need category / award interaction)
@@ -171,12 +185,12 @@ def main():
 			read_category(csv_file, cms, code)
 
 	except Exception as e:
-		logger.error(e)
+		l.error(e)
 
 	# pause before exit
 	time.sleep(2)
 	cms.bot.quit()
-	logger.info('exited script correctly')
+	l.info('exited script correctly')
 
 if __name__ == '__main__':
 	main()

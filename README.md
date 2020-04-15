@@ -18,12 +18,13 @@ Currently have to paste the relevant information into csv columns and then selec
 
 Started developing batch functionality.
 
-- ~~ran into issues interacting with table objects as have to match text (no ids or names)~~ **solved**
-- ~~difficulty locating correct tick boxes as they have all have unique IDs~~ **solved**
-- select 'change metadata'
-- hit 'Go' button
-- hit 'Make all items live' button
-- hit 'Save changes for all items'
+- ~~ran into issues interacting with table objects as have to match text (no ids or names)~~ 
+- ~~difficulty locating correct tick boxes as they have all have unique IDs~~ 
+- ~~select 'change metadata'~~
+- ~~hit 'Go' button~~
+- ~~hit 'Make all items live' button~~
+- ~~hit 'Save changes for all items'~~
+- suspend items button
 
 ### Improvements 
 
