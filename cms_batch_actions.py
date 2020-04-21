@@ -62,7 +62,7 @@ class CMSBot:
 		bot.find_element_by_xpath(f'//option[@value="{code}"]').click()
 		l.info(f'selected {code}')
 		
-		# input('press key to continue: ')
+		input('press key to continue: ')
 		# clicks view
 		bot.find_element_by_xpath('//input[@type="submit"]').click()
 		l.info('clicked [View]')
