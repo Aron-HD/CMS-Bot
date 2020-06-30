@@ -6,7 +6,7 @@ import time
 import logging
 import sys
 chrome_options = Options()
-chrome_options.add_argument('--headless')
+# chrome_options.add_argument('--headless')
 
 # Setup logging
 def setup_custom_logger(name):
