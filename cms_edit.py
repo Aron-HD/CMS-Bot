@@ -223,11 +223,9 @@ def select2(cms):
 			r = csv.DictReader(csvfile)
 			for row in r:
 				ID = row['ID']
+				Award = row['Award'].strip().title() # to update additional_info
 				if ' + ' in row['Award']:
-					Award = row['Award'].title().replace('+', 'and') + ' Award'
-				else:
-					Award = row['Award'].title() # to update additional_info
-
+					Award = Award.replace('+', 'and')# + ' Award' 
 				logger.info(f'-> csv row [{ID}, {Award}]')
 
 				try:
